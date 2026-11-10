@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ciné France – Réservation</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: #1f2833;
+      --gold: #dfb15b;
+      --accent: #e50914;
+      --mut: #9aa5b1;
+      --serif: 'Playfair Display', Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% -10%, #1a2230, var(--bg) 60%) fixed;
+      color: #eee;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    header {
+      text-align: center;
+      padding: 24px 0 16px;
+    }
+
+    h1 {
+      font: italic 500 2.2rem var(--serif);
+      color: var(--gold);
+    }
+
+    header p {
+      color: var(--mut);
+      font-size: .9rem;
+      margin-top: 4px;
+    }
+
+    main {
+      max-width: 95vw;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+      animation: fadeIn .5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    h2 {
+      font: 600 1.6rem var(--serif);
+      color: var(--gold);
+      margin: 10px 0 16px;
+    }
+
+    button {
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 26px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .btn:hover:not(:disabled) {
+      filter: brightness(1.2);
+    }
+
+    .btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .btn.alt {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+    }
+
+    .bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .movies {
+      display: flex;
+      gap: 22px;
+      height: 68vh;
+      min-height: 430px;
+      padding: 20px 0;
+    }
+
+    .movie {
+      flex: 1;
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid #333;
+      transition: .4s;
+    }
+
+    .movie > img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .movie:hover, .movie:focus-within {
+      transform: scale(1.05);
+      z-index: 2;
+      border-color: var(--gold);
+      box-shadow: 0 0 35px rgba(223, 177, 91, .55);
+    }
+
+    .ttl {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 16px;
+      background: linear-gradient(#000c, transparent);
+      font: 600 1.15rem var(--serif);
+      z-index: 3;
+    }
+
+    .pop {
+      position: absolute;
+      inset: auto 10px 10px;
+      padding: 18px;
+      border-radius: 12px;
+      background: rgba(15, 18, 24, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(223, 177, 91, .4);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: .4s;
+      z-index: 4;
+    }
+
+    .movie:hover .pop, .movie:focus-within .pop {
+      opacity: 1;
+      transform: none;
+    }
+
+    .pop em {
+      color: var(--gold);
+      font-size: .85rem;
+    }
+
+    .pop p {
+      margin: 8px 0 14px;
+      font-size: .92rem;
+      line-height: 1.55;
+    }
+
+    .pr {
+      margin-left: 10px;
+      padding-left: 10px;
+      border-left: 1px solid #fff6;
+    }
+
+    .dates {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 6px 0;
+    }
+
+    .date {
+      min-width: 84px;
+      padding: 12px;
+      text-align: center;
+      border-radius: 10px;
+      background: var(--card-bg);
+      border: 2px solid transparent;
+      color: #eee;
+    }
+
+    .date b {
+      display: block;
+      font-size: 1.5rem;
+    }
+
+    .date.sel, .time.sel, .pm.sel {
+      border-color: var(--gold);
+      background: #3a3220;
+      color: var(--gold);
+    }
+
+    .th {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .th h3 {
+      color: var(--gold);
+      font: 600 1.15rem var(--serif);
+    }
+
+    .th small {
+      color: var(--mut);
+    }
+
+    .time {
+      padding: 9px 18px;
+      margin-left: 8px;
+      border-radius: 8px;
+      border: 2px solid #3b4757;
+      background: #141a22;
+      color: #eee;
+    }
+
+    .seatwrap {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 26px;
+      margin: 4px 0;
+      min-width: 520px;
+    }
+
+    .blk {
+      display: flex;
+      gap: 5px;
+    }
+
+    .lbl {
+      width: 20px;
+      color: var(--mut);
+      font-size: .75rem;
+      text-align: center;
+    }
+
+    .seat {
+      width: 24px;
+      height: 22px;
+      border-radius: 6px 6px 3px 3px;
+      background: #4a5a6e;
+      border: 0;
+    }
+
+    .seat:hover:not(.sold) {
+      background: #7a8da6;
+    }
+
+    .seat.sold {
+      background: var(--accent);
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .seat.sel {
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold);
+    }
+
+    .screen {
+      width: 70%;
+      margin: 26px auto 4px;
+      height: 40px;
+      border-top: 6px solid var(--gold);
+      border-radius: 50% 50% 0 0/100% 100% 0 0;
+      box-shadow: 0 -14px 30px rgba(223, 177, 91, .45);
+      text-align: center;
+      color: var(--gold);
+      padding-top: 10px;
+      font-size: .85rem;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-top: 14px;
+      color: var(--mut);
+      font-size: .85rem;
+      flex-wrap: wrap;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* F&B / Snack Styles */
+    .fnb-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 25px;
+    }
+
+    .fnb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .fnb-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #333;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .fnb-card img {
+      width: 65px;
+      height: 65px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .fnb-card-info {
+      flex-grow: 1;
+    }
+
+    .fnb-card-info h4 {
+      margin: 0 0 2px 0;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+
+    .fnb-card-info p {
+      color: var(--mut);
+      font-size: 0.7rem;
+      margin: 0 0 6px 0;
+    }
+
+    .fnb-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price {
+      font-weight: bold;
+      color: var(--gold);
+      font-size: 0.9rem;
+    }
+
+    .add-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: filter .2s;
+    }
+
+    .add-btn:hover {
+      filter: brightness(1.2);
+    }
+
+    .side {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px;
+      align-self: start;
+      position: sticky;
+      top: 10px;
+      border-top: 4px solid var(--gold);
+    }
+
+    .side h3 {
+      color: var(--gold);
+      font: 600 1.15rem var(--serif);
+      margin-bottom: 12px;
+    }
+
+    .ln {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: .9rem;
+      border-bottom: 1px dashed #3b4757;
+    }
+
+    .tot {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.3rem;
+      color: var(--gold);
+      margin: 14px 0;
+      font-weight: 700;
+    }
+
+    .cart-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .qty-btn {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qty-btn:hover {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .pay {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .pm {
+      background: var(--card-bg);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 16px;
+      color: #eee;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .fields .w {
+      grid-column: 1/3;
+    }
+
+    input {
+      background: #141a22;
+      border: 1px solid #3b4757;
+      border-radius: 8px;
+      padding: 12px;
+      color: #eee;
+      font: inherit;
+      width: 100%;
+    }
+
+    .note {
+      color: var(--mut);
+      font-size: .8rem;
+      margin-top: 12px;
+    }
+
+    #ticket {
+      max-width: 460px;
+      margin: 0 auto;
+      background: #fff;
+      color: #111;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 50px rgba(223, 177, 91, .35);
+    }
+
+    .ph {
+      height: 240px;
+      background: linear-gradient(160deg, #2c3e50, #141a22);
+    }
+
+    .ph img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    .bd {
+      padding: 20px;
+    }
+
+    .bd h3 {
+      font: 600 1.5rem var(--serif);
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .kv small {
+      display: block;
+      color: #777;
+      font-size: .75rem;
+    }
+
+    .perf {
+      border-top: 2px dashed #bbb;
+      margin: 0 -20px;
+    }
+
+    .qr {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding-top: 16px;
+    }
+
+    .bars {
+      height: 46px;
+      width: 100%;
+      background: repeating-linear-gradient(90deg, #111 0 2px, #fff 2px 5px, #111 5px 6px, #fff 6px 10px, #111 10px 13px, #fff 13px 15px);
+    }
+
+    @media(max-width: 900px) {
+      .fnb-layout {
+        grid-template-columns: 1fr;
+      }
+      .movies {
+        flex-direction: column;
+        height: auto;
+      }
+      .movie {
+        min-height: 420px;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .side {
+        position: static;
+      }
+    }
+
+    @media(prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #ticket, #ticket * {
+        visibility: visible;
+      }
+      #ticket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        box-shadow: none;
+      }
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Filmora</h1>
+    <p>l'histoire du cinéma français</p>
+  </header>
+
+  <main>
+    <!-- STEP 1 -->
+    <section class="step" id="s1">
+      <h2>1. Film</h2>
+      <div class="movies" id="movies"></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step" id="s2">
+      <h2>2. Séance</h2>
+      <div class="dates" id="dates"></div>
+      <div id="ths"></div>
+      <div class="bar">
+        <button class="btn alt" onclick="go(1)">Retour</button>
+        <button class="btn" id="n2" onclick="go(3)" disabled>Choisir mes places</button>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step" id="s3">
+      <h2>3. Places</h2>
+      <div class="seatwrap">
+        <div id="seats"></div>
+        <div class="screen">Écran</div>
+        <div class="legend">
+          <span><i style="background:#4a5a6e"></i>Libre</span>
+          <span><i style="background:var(--accent);opacity:.45"></i>Occupé</span>
+          <span><i style="background:var(--gold)"></i>Sélectionné</span>
+        </div>
+      </div>
+      <div class="bar">
+        <button class="btn alt" onclick="go(2)">Retour</button>
+        <span id="seatinfo"></span>
+        <button class="btn" id="n3" onclick="go(4)" disabled>Choisir mes snacks</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: F&B SNACKS -->
+    <section class="step" id="s4">
+      <h2>4. En-cas & Confiseries</h2>
+      <div class="fnb-layout">
+        <div>
+          <div class="fnb-grid">
+            <!-- Snack Item 1: Sweet Popcorn Image (grandpop.jpg) -->
+            <div class="fnb-card">
+              <img src="grandpop.jpg" alt="Pop-corn Sucré">
+              <div class="fnb-card-info">
+                <h4>Grand Pop-corn Sucré</h4>
+                <p>Le classique incontournable des salles obscures</p>
+                <div class="fnb-footer">
+                  <span class="price">5,50 €</span>
+                  <button class="add-btn" onclick="modifySnack('Grand Pop-corn Sucré', 5.50, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 2: Salty Popcorn Image (grandpop.jpg) -->
+            <div class="fnb-card">
+              <img src="grandpop.jpg" alt="Pop-corn Salé">
+              <div class="fnb-card-info">
+                <h4>Grand Pop-corn Salé</h4>
+                <p>Pétales de maïs croustillants et salés</p>
+                <div class="fnb-footer">
+                  <span class="price">5,50 €</span>
+                  <button class="add-btn" onclick="modifySnack('Grand Pop-corn Salé', 5.50, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 3: Macarons Image (mac.jpg) -->
+            <div class="fnb-card">
+              <img src="mac.jpg" alt="Macarons">
+              <div class="fnb-card-info">
+                <h4>Assortiment de Macarons (x4)</h4>
+                <p>Pâtisserie parisienne raffinée</p>
+                <div class="fnb-footer">
+                  <span class="price">6,50 €</span>
+                  <button class="add-btn" onclick="modifySnack('Macarons (x4)', 6.50, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 4: M&M's Image (m&m.jpg) -->
+            <div class="fnb-card">
+              <img src="m&m.jpg" alt="M&M's">
+              <div class="fnb-card-info">
+                <h4>M&M's Cacahuète / Chocolat (200g)</h4>
+                <p>Le sachet idéal à partager devant le film</p>
+                <div class="fnb-footer">
+                  <span class="price">4,50 €</span>
+                  <button class="add-btn" onclick="modifySnack('M&M\'s (200g)', 4.50, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 5: Kinder Bueno Image (kinder.jpg) -->
+            <div class="fnb-card">
+              <img src="kinder.jpg" alt="Kinder Bueno">
+              <div class="fnb-card-info">
+                <h4>Kinder Bueno (Pack de 2)</h4>
+                <p>Gaufrette croustillante au chocolat au lait</p>
+                <div class="fnb-footer">
+                  <span class="price">2,50 €</span>
+                  <button class="add-btn" onclick="modifySnack('Kinder Bueno (Pack de 2)', 2.50, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 6: Haribo Starmix Image (starmix.jpg) -->
+            <div class="fnb-card">
+              <img src="starmix.jpg" alt="Haribo">
+              <div class="fnb-card-info">
+                <h4>Sachet Haribo Starmix / Tangfastics</h4>
+                <p>Bonbons gélifiés fruités et acidulés</p>
+                <div class="fnb-footer">
+                  <span class="price">3,50 €</span>
+                  <button class="add-btn" onclick="modifySnack('Sachet Haribo', 3.50, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 7: Magnum Ice Cream Image (magnum.jpg) -->
+            <div class="fnb-card">
+              <img src="magnum.jpg" alt="Glace Magnum">
+              <div class="fnb-card-info">
+                <h4>Esquimau Glacé (Magnum Amande / Classique)</h4>
+                <p>Glace enrobée de chocolat croquant</p>
+                <div class="fnb-footer">
+                  <span class="price">4,20 €</span>
+                  <button class="add-btn" onclick="modifySnack('Glace Magnum', 4.20, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 8: Sandwich Image (butter.jpg) -->
+            <div class="fnb-card">
+              <img src="butter.jpg" alt="Sandwich">
+              <div class="fnb-card-info">
+                <h4>Sandwich Jambon-Beurre</h4>
+                <p>Baguette fraîche de boulangerie</p>
+                <div class="fnb-footer">
+                  <span class="price">4,80 €</span>
+                  <button class="add-btn" onclick="modifySnack('Sandwich Jambon-Beurre', 4.80, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 9: Beverage Bottle Image (coke.jpg) -->
+            <div class="fnb-card">
+              <img src="coke.jpg" alt="Boisson">
+              <div class="fnb-card-info">
+                <h4>Coca-Cola / Perrier / Oasis (50cl)</h4>
+                <p>Boisson fraîche en bouteille</p>
+                <div class="fnb-footer">
+                  <span class="price">4,00 €</span>
+                  <button class="add-btn" onclick="modifySnack('Boisson 50cl', 4.00, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Snack Item 10: Movie Combo Image (pngtree-movie-night-popcorn-and-drink-combo-png-image_20007455.jpg) -->
+            <div class="fnb-card">
+              <img src="pngtree-movie-night-popcorn-and-drink-combo-png-image_20007455.jpg" alt="Combo">
+              <div class="fnb-card-info">
+                <h4>Le Grand Combo Cinéma</h4>
+                <p>Pop-corn + Boisson + Confiserie</p>
+                <div class="fnb-footer">
+                  <span class="price">10,90 €</span>
+                  <button class="add-btn" onclick="modifySnack('Grand Combo Cinéma', 10.90, 1)">Ajouter</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="side" id="sum4"></aside>
+      </div>
+      <div class="bar">
+        <button class="btn alt" onclick="go(3)">Retour</button>
+      </div>
+    </section>
+
+    <!-- STEP 5: PAYMENT -->
+    <section class="step" id="s5">
+      <h2>5. Paiement sécurisé</h2>
+      <div class="grid">
+        <div>
+          <div class="pay" id="pay"></div>
+          <div class="fields" id="card">
+            <input class="w" id="cn" placeholder="Numéro de carte" inputmode="numeric" maxlength="19" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()">
+            <input class="w" placeholder="Titulaire de la carte">
+            <input placeholder="MM/AA" maxlength="5">
+            <input placeholder="CVC" maxlength="3" inputmode="numeric">
+          </div>
+          <div class="fields" id="vch">
+            <input class="w" placeholder="Code du bon cadeau">
+          </div>
+          <p class="note">Paiement simulé pour la présentation : aucune donnée n’est envoyée ni enregistrée.</p>
+        </div>
+        <aside class="side" id="sum5"></aside>
+      </div>
+      <div class="bar">
+        <button class="btn alt" onclick="go(4)">Retour</button>
+      </div>
+    </section>
+
+    <!-- STEP 6: E-TICKET -->
+    <section class="step" id="s6">
+      <h2 style="text-align:center">6. Réservation confirmée</h2>
+      <div id="ticket"></div>
+      <div class="bar" style="justify-content:center">
+        <button class="btn" onclick="window.print()">Télécharger le PDF</button>
+        <button class="btn alt" onclick="location.reload()">Nouvelle réservation</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s), E = n => n.toFixed(2).replace('.', ',') + ' €';
+    
+    // Movie Data array containing movie poster image sources (First movie uses 'movie11.jpg')
+    const M = [
+      { img: 'movie11.jpg', t: 'Les Pionniers : Frères Lumière', era: 'Le Cinématographe, 1895', p: 8, d: 'Le 28 décembre 1895, au Salon indien du Grand Café à Paris, Auguste et Louis Lumière projettent leurs premiers films : le cinéma est né.' },
+      { img: 'film2.jpg', t: 'Le Voyage dans la Lune', era: 'Georges Méliès, 1902', p: 10, d: 'Le magicien Georges Méliès invente les effets spéciaux et la science-fiction avec cette fusée plantée dans l’œil de la Lune, un chef-d’œuvre de trucages animés.' },
+      { img: 'movie3.jpeg', t: 'À bout de souffle', era: 'La Nouvelle Vague, 1960', p: 12, d: 'Jean-Luc Godard bouscule le langage du cinéma : faux raccords, caméra à l’épaule et liberté d’une jeunesse parisienne.' }
+    ];
+
+    const TH = [
+      ['Le Champo', 'Paris 5e, Quartier latin', ['14:00', '17:30', '20:45']],
+      ['Le Grand Rex', 'Paris 2e, Grands Boulevards', ['15:15', '18:00', '21:15']],
+      ['La Cinémathèque Française', 'Paris 12e, Bercy', ['14:30', '17:00', '20:00']]
+    ];
+    const PM = [['card', '💳', 'Carte bancaire'], ['wallet', '📱', 'Apple Pay / Google Pay'], ['paypal', '🅿️', 'PayPal'], ['voucher', '🎁', 'Bon cadeau']];
+    
+    // 10 days starting from October 30th (Oct 30 to Nov 8)
+    const DATES_LIST = [
+      { day: 'Ven', num: 30, mon: 'oct.' },
+      { day: 'Sam', num: 31, mon: 'oct.' },
+      { day: 'Dim', num: 1,  mon: 'nov.' },
+      { day: 'Lun', num: 2,  mon: 'nov.' },
+      { day: 'Mar', num: 3,  mon: 'nov.' },
+      { day: 'Mer', num: 4,  mon: 'nov.' },
+      { day: 'Jeu', num: 5,  mon: 'nov.' },
+      { day: 'Ven', num: 6,  mon: 'nov.' },
+      { day: 'Sam', num: 7,  mon: 'nov.' },
+      { day: 'Dim', num: 8,  mon: 'nov.' }
+    ];
+
+    const R = 'BCDEFGHIJKLMNOPQRST';
+    const S = { m: null, mi: 0, dateIdx: 0, th: null, time: null, seats: [], snacks: {}, pay: 'card' };
+    
+    const total = () => {
+      let seatTotal = S.seats.length * S.m.p;
+      let snackTotal = Object.values(S.snacks).reduce((acc, item) => acc + (item.price * item.qty), 0);
+      return seatTotal + snackTotal;
+    };
+    
+    function go(n) {
+      document.querySelectorAll('.step').forEach((e, i) => e.classList.toggle('active', i + 1 == n));
+      if (n == 2) drawSel();
+      if (n == 3) drawSeats();
+      if (n == 4) updateCartDisplay();
+      if (n == 5) { drawPay(); updateCheckoutSummary(); }
+      scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Render movie cards using each movie's poster image source (movie11.jpg, film2.jpg, movie3.jpeg)
+    $('#movies').innerHTML = M.map((m, i) => `<div class="movie" style="background-image: url('${m.img}')" tabindex="0"><img src="${m.img}" alt="${m.t}" onerror="this.style.display='none'"><div class="ttl">${m.t}</div><div class="pop"><em>${m.era}</em><p>${m.d}</p><button class="btn" onclick="pick(${i})">Sélectionner<span class="pr">${E(m.p)}</span></button></div></div>`).join('');
+    
+    function pick(i) {
+      S.m = M[i];
+      S.mi = i;
+      S.th = null;
+      S.time = null;
+      S.seats = [];
+      S.snacks = {};
+      go(2);
+    }
+
+    function drawSel() {
+      $('#dates').innerHTML = DATES_LIST.map((d, idx) => `<button class="date${S.dateIdx == idx ? ' sel' : ''}" onclick="S.dateIdx=${idx};S.seats=[];drawSel()">${d.day}<b>${d.num}</b>${d.mon}</button>`).join('');
+      $('#ths').innerHTML = TH.map((t, i) => `<div class="th"><div><h3>${t[0]}</h3><small>${t[1]}</small></div><div>${t[2].map(h => `<button class="time${S.th == i && S.time == h ? ' sel' : ''}" onclick="S.th=${i};S.time='${h}';S.seats=[];drawSel()">${h}</button>`).join('')}</div></div>`).join('');
+      $('#n2').disabled = (S.th === null || S.time === null);
+    }
+
+    function drawSeats() {
+      const h = [...[S.mi, S.dateIdx, S.th, S.time].join()].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9973, 7);
+      $('#seats').innerHTML = [...R].map((r, ri) => {
+        let c = 0;
+        const blk = n => `<div class="blk">${Array.from({ length: n }, () => {
+          c++;
+          const id = r + c, sold = (h + ri * 13 + c * 7 + ri * c) % 6 == 0;
+          return `<button class="seat${sold ? ' sold' : ''}${S.seats.includes(id) ? ' sel' : ''}" ${sold ? 'disabled' : ''} title="${id}" aria-label="Place ${id}" onclick="tog('${id}')"></button>`;
+        }).join('')}</div>`;
+        return `<div class="row"><span class="lbl">${r}</span>${blk(3)}${blk(10)}${blk(3)}<span class="lbl">${r}</span></div>`;
+      }).join('');
+      $('#seatinfo').innerHTML = S.seats.length ? `<b>${S.seats.join(', ')}</b> : ${E(S.seats.length * S.m.p)}` : 'Aucune place sélectionnée';
+      $('#n3').disabled = !S.seats.length;
+    }
+
+    function tog(id) {
+      const i = S.seats.indexOf(id);
+      if (i >= 0) S.seats.splice(i, 1);
+      else if (S.seats.length < 8) S.seats.push(id);
+      else alert('Maximum 8 places par réservation.');
+      drawSeats();
+    }
+
+    function modifySnack(name, price, change) {
+      if (!S.snacks[name]) {
+        if (change > 0) S.snacks[name] = { price: price, qty: change };
+      } else {
+        S.snacks[name].qty += change;
+        if (S.snacks[name].qty <= 0) delete S.snacks[name];
+      }
+      updateCartDisplay();
+    }
+
+    function sumHTML(pay) {
+      const ln = (a, b) => `<div class="ln"><span>${a}</span><span>${b}</span></div>`;
+      const seatCount = S.seats.length;
+      const selDateObj = DATES_LIST[S.dateIdx];
+      const hasSnacks = Object.keys(S.snacks).length > 0;
+
+      let html = `<h3>Votre commande</h3><small style="color:var(--mut)">${S.m.t}<br>${selDateObj.day} ${selDateObj.num} ${selDateObj.mon} à ${S.time}<br>${TH[S.th][0]}</small>`;
+      html += ln(`Places ${S.seats.join(', ')}`, `${seatCount} × ${E(S.m.p)}`);
+
+      const snackKeys = Object.keys(S.snacks);
+      snackKeys.forEach(name => {
+        const item = S.snacks[name];
+        html += `<div class="cart-item-row" style="margin:6px 0;">
+          <span>${name} × ${item.qty}</span>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="modifySnack('${name}', ${item.price}, -1)">−</button>
+            <span>${item.qty}</span>
+            <button class="qty-btn" onclick="modifySnack('${name}', ${item.price}, 1)">+</button>
+          </div>
+        </div>`;
+      });
+
+      html += `<div class="tot"><span>Total</span><span>${E(total())}</span></div>`;
+      
+      if (!pay) {
+        html += `<div style="display:flex; gap:10px; margin-top:15px;">
+          <button class="btn alt" style="flex:1;" onclick="go(5)">Passer / Skip</button>
+          <button class="btn" style="flex:2;" id="proceedSnackBtn" onclick="go(5)" ${!hasSnacks ? 'disabled' : ''}>Passer au paiement</button>
+        </div>`;
+      } else {
+        html += `<button class="btn" style="width:100%" onclick="payNow()">Payer ${E(total())}</button>`;
+      }
+      return html;
+    }
+
+    function updateCartDisplay() {
+      $('#sum4').innerHTML = sumHTML(false);
+    }
+
+    function updateCheckoutSummary() {
+      $('#sum5').innerHTML = sumHTML(true);
+    }
+
+    function drawPay() {
+      $('#pay').innerHTML = PM.map(p => `<button class="pm${S.pay == p[0] ? ' sel' : ''}" onclick="S.pay='${p[0]}';drawPay()"><div style="font-size:2rem">${p[1]}</div>${p[2]}</button>`).join('');
+      $('#card').style.display = S.pay == 'card' ? 'grid' : 'none';
+      $('#vch').style.display = S.pay == 'voucher' ? 'grid' : 'none';
+    }
+
+    function payNow() {
+      if (S.pay == 'card' && $('#cn').value.replace(/\s/g, '').length < 12) return alert('Saisissez un numéro de carte à 16 chiffres (paiement simulé).');
+      $('#sum5 .btn').textContent = 'Traitement en cours…';
+      setTimeout(ticket, 900);
+    }
+
+    function ticket() {
+      const id = 'CF-' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+        selDateObj = DATES_LIST[S.dateIdx],
+        sn = Object.keys(S.snacks).map(k => `${k} ×${S.snacks[k].qty}`).join(', ') || 'Aucun',
+        info = `${id} | ${S.m.t} | ${selDateObj.day} ${selDateObj.num} ${selDateObj.mon} 2026 ${S.time} | ${TH[S.th][0]} | Places ${S.seats.join(' ')}`;
+      
+      // E-Ticket rendering using the selected movie's poster image source (e.g., S.m.img) as the top banner image
+      $('#ticket').innerHTML = `<div class="ph" style="background-image: url('${S.m.img}'); background-size: cover; background-position: center;"><img src="${S.m.img}" alt="${S.m.t}" onerror="this.style.display='none'"></div><div class="bd"><small style="color:#b8892f">${S.m.era}</small><h3>${S.m.t}</h3>
+<div class="kv"><div><small>Réservation</small><b>${id}</b></div><div><small>Date</small><b>${selDateObj.day} ${selDateObj.num} ${selDateObj.mon} 2026</b></div><div><small>Salle</small><b>${TH[S.th][0]}</b></div><div><small>Séance</small><b>${S.time}</b></div><div><small>Places</small><b>${S.seats.join(', ')}</b></div><div><small>Total payé</small><b>${E(total())}</b></div><div style="grid-column:1/3"><small>Snacks</small><b>${sn}</b></div></div>
+<div class="perf"></div><div class="qr"><img width="170" height="170" alt="QR code du billet" src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&margin=4&data=${encodeURIComponent(info)}"><div class="bars"></div><small style="color:#777">${id} : présentez ce billet à l’entrée</small></div></div>`;
+      go(6);
+    }
+
+    go(1);
+  </script>
+</body>
+</html>
